@@ -12,8 +12,7 @@ pipeline {
                     if (!fileExists("${env.WORKSPACE}/${VIRTUAL_ENV}")) {
                         sh "python -m venv ${VIRTUAL_ENV}"
                     }
-                    sh "source ${VIRTUAL_ENV}/bin/activate"
-                    sh "pip install -r requirements.txt"
+                    sh "source ${VIRTUAL_ENV}/bin/activate && pip install -r requirements.txt"
                 }
             }
         }
@@ -21,8 +20,7 @@ pipeline {
         stage('Lint') {
             steps {
                 script {
-                    sh "source ${VIRTUAL_ENV}/bin/activate"
-                    sh "flake8 app.py"
+                    sh "source ${VIRTUAL_ENV}/bin/activate && flake8 app.py"
                 }
             }
         }
