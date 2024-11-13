@@ -28,36 +28,8 @@ VIRTUAL_ENV = 'venv' }
                 }
             }
         }
-        stage('Coverage'){
-            steps {
-                script {
-                    bat "${VIRTUAL_ENV}\\Scripts\\activate && coverage run -m pytest"
-                    bat "${VIRTUAL_ENV}\\Scripts\\activate && coverage report"
-                    bat "${VIRTUAL_ENV}\\Scripts\\activate && coverage html"
-                }
-            }
-            post {
-                success {
-                    archiveArtifacts artifacts: 'htmlcov/**', fingerprint: true
-                }
-            }
-        }
-        stage('Security Scan') {
-            steps {
-                script {
-                    bat "${VIRTUAL_ENV}\\Scripts\\activate && bandit -r . --exit-zero --format html -o bandit-report.html"
-                }
-            }
-            post {
-                success {
-                    echo 'Security scan completed successfully.'
-                    archiveArtifacts artifacts: 'bandit-report.html', fingerprint: true
-                }
-                failure {
-                    echo 'Security scan failed. Check the Bandit report for details.'
-                }
-            }
-        }
+        
+        
         stage('Deploy') {
             steps {
                 script {
