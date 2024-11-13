@@ -1,48 +1,72 @@
 pipeline {
     agent any
-
     environment {
-        VIRTUAL_ENV = 'venv'
-    }
-
+VIRTUAL_ENV = 'venv' }
     stages {
         stage('Setup') {
             steps {
                 script {
-                    if (!fileExists("${env.WORKSPACE}/${VIRTUAL_ENV}")) {
-                        sh "python -m venv ${VIRTUAL_ENV}"
+                    if (!fileExists("${env.WORKSPACE}\\${VIRTUAL_ENV}")) {
+                        bat "python -m venv ${VIRTUAL_ENV}"
                     }
-                    sh "source ${VIRTUAL_ENV}/bin/activate && pip install -r requirements.txt"
+                    bat "${VIRTUAL_ENV}\\Scripts\\activate && pip install -r requirements.txt"
+                    bat "${VIRTUAL_ENV}\\Scripts\\activate && pip freeze"  // List installed packages
                 }
             }
         }
-
         stage('Lint') {
             steps {
                 script {
-                    sh "source ${VIRTUAL_ENV}/bin/activate && flake8 app.py"
+                    bat "${VIRTUAL_ENV}\\Scripts\\activate && flake8 app.py"
                 }
             }
         }
-
         stage('Test') {
             steps {
                 script {
-                    sh "source ${VIRTUAL_ENV}/bin/activate && pytest"
+                    bat "${VIRTUAL_ENV}\\Scripts\\activate && pytest"
                 }
             }
         }
-
+        stage('Coverage'){
+            steps {
+                script {
+                    bat "${VIRTUAL_ENV}\\Scripts\\activate && coverage run -m pytest"
+                    bat "${VIRTUAL_ENV}\\Scripts\\activate && coverage report"
+                    bat "${VIRTUAL_ENV}\\Scripts\\activate && coverage html"
+                }
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'htmlcov/**', fingerprint: true
+                }
+            }
+        }
+        stage('Security Scan') {
+            steps {
+                script {
+                    bat "${VIRTUAL_ENV}\\Scripts\\activate && bandit -r . --exit-zero --format html -o bandit-report.html"
+                }
+            }
+            post {
+                success {
+                    echo 'Security scan completed successfully.'
+                    archiveArtifacts artifacts: 'bandit-report.html', fingerprint: true
+                }
+                failure {
+                    echo 'Security scan failed. Check the Bandit report for details.'
+                }
+            }
+        }
         stage('Deploy') {
             steps {
                 script {
                     // Deployment logic, e.g., pushing to a remote server
-                    echo "Deploying application..."
+                    echo 'Deploying application...'
                 }
             }
         }
     }
-
     post {
         always {
             cleanWs()
